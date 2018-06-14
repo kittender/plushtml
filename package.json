@@ -2,6 +2,7 @@
   "name": "plushtml",
   "version": "0.0.0",
   "description": "plushtml allows you to write a HTML document structure with a little twist",
+  "homepage": "https://github.com/kittender/plushtml#readme",
   "main": "plushtml.min.js",
   "scripts": {
     "test": "plushtml.test.js"
