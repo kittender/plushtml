@@ -1,101 +1,91 @@
 
-// HTML objects positions & context utils
-const buildContext = require('./lib/htmlContext.js').buildContext;
-const updateContext = require('./lib/htmlContext.js').updateContext;
-const getTagPosition = require('./lib/htmlContext.js').getTagPosition;
-const updateHOP = require('./lib/htmlContext.js').updateHOP;
-
-// HTML String utils
 const getChunk = require('./lib/htmlString.js').getChunk;
-const removeChunk = require('./lib/htmlString.js').removeChunk;
-const pasteBefore = require('./lib/htmlString.js').pasteBefore;
-const pasteAfter = require('./lib/htmlString.js').pasteAfter;
-const isChildrenOf = require('./lib/htmlString.js').isChildrenOf;
-const changeTag = require('./lib/htmlString.js').changeTag;
+const getStart = require('./lib/htmlPosition.js').getStart;
+const getEnd = require('./lib/htmlPosition.js').getEnd;
+const getShallowDOM = require('./lib/shallowDOM.js').getShallowDOM;
+const parentCheck = require('./lib/shallowDOM.js').parentCheck;
+const removeNode = require('./lib/shallowDOM.js').removeNode;
+const updateNode = require('./lib/shallowDOM.js').updateNode;
+const transmuteNode = require('./lib/shallowDOM.js').transmuteNode;
 
 
-function parentCheck(parentBody, parentName, childName) {
-    if (!isChildrenOf(parentBody, childName)) {
-        console.error("PLUSHTMLParser: <"+childName+"> must be a child of <"+parentName+">");
-        return false;
+function getStructure() {
+    return [{
+        tag: "head",
+        children: [{
+            tag: "header",
+            children: [{
+                tag: "title"
+            }]
 
-    } else {
-        return true;
-    }
+        }]
+    },{
+        tag: "body"
+    },{
+        tag: "foot",
+        children: [{
+            tag: "footer"
+        }]
+    }];
 }
 
+
 function parsePlushtml(plushtml) {
-    let context = buildContext(plushtml, updateHOP(plushtml, {}));
+    if(typeof plushtml === "string") {
+        let shallowDOM = getShallowDOM(plushtml, getStructure());
+        let HTML = getChunk(plushtml, { start: 0, end: getStart(plushtml, "head") }); // extracting code before <head>
 
-    if (context.hop.body) {
-        if (context.hop.head) {
+        if(shallowDOM.body) {
 
-            const HEAD = getChunk(context.html, context.hop.head);
+            if (shallowDOM.head) {
+                if (shallowDOM.header) {
+                    parentCheck(shallowDOM.head.inner, "head", "header");
 
-            if(HEAD) {
-                if(!parentCheck(HEAD, "head", "header")) {
-                    return;
-                }
+                    // remove <header> from <head>
+                    shallowDOM.head = removeNode("header", shallowDOM.head); 
 
-                const HEADER = getChunk(context.html, getTagPosition(context.html, "header"));
+                    if (shallowDOM.title) {
+                        parentCheck(shallowDOM.header.inner, "header", "title");
 
-                if (HEADER) {
-                    if(!parentCheck(HEADER, "header", "title")) {
-                        return;
+                        shallowDOM.header = transmuteNode("title", "h1", shallowDOM.header); // turns title into <h1> for <header>
+                        shallowDOM.head = updateNode(shallowDOM.head, shallowDOM.title.node + shallowDOM.head.inner); // insert title before <head> inner
                     }
 
-                    const TITLE = getChunk(context.html, getTagPosition(context.html, "title"));
-
-                    if(TITLE) {
-                        context = updateContext(changeTag(context.html, "title", "h1"), context.hop); // keep the info as a <h1> tag
-                        context = updateContext(pasteBefore(context.html, TITLE, context.hop.head.inner.start), context.hop); // paste the <title> tag in <head>
-                    }
-
-                    const header = getTagPosition(context.html, "header");
-                    const HEADER_UPDATED = getChunk(context.html, header);
-
-                    // HEADER Cut/Paste
-                    context = updateContext(removeChunk(context.html, header), context.hop);
-                    context = updateContext(pasteBefore(context.html, HEADER_UPDATED, context.hop.body.inner.start), context.hop);
-
+                    shallowDOM.body = updateNode(shallowDOM.body, shallowDOM.header.node + shallowDOM.body.inner); // insert header before <body> inner
                 }
+
+                HTML += shallowDOM.head.node; // PASTE HEAD NODE INTO HTML
             }
 
-        }
-
-        if (context.hop.foot) {
-
-            const FOOT = getChunk(context.html, context.hop.foot);
-
-            if (FOOT) {
-                if(!parentCheck(FOOT, "foot", "footer")) {
-                    return;
+            if (shallowDOM.foot) {
+                if (shallowDOM.footer) {
+                    parentCheck(shallowDOM.foot.inner, "foot", "footer");
+                    
+                    shallowDOM.foot = removeNode("footer", shallowDOM.foot); // remove <footer> from <foot>
+                    shallowDOM.body = updateNode(shallowDOM.body, shallowDOM.body.inner + shallowDOM.footer.node); // insert footer after <body> inner
                 }
 
-                const footer = getTagPosition(context.html, "footer");
-                const FOOTER = getChunk(context.html, footer);
-
-                // FOOTER Cut/Paste
-                context = updateContext(removeChunk(context.html, footer), context.hop);
-                context = updateContext(pasteAfter(context.html, FOOTER, context.hop.body.inner.end), context.hop);
-
-
-                const FOOT_CONTENT = getChunk(context.html, context.hop.foot.inner);
-
-                if (FOOT_CONTENT && FOOT_CONTENT.length > 0) {
-
-                    // FOOT_CONTENT Cut/Paste
-                    context = updateContext(removeChunk(context.html, context.hop.foot), context.hop);
-                    context = updateContext(pasteAfter(context.html, FOOT_CONTENT, context.hop.body.inner.end), context.hop);
-                }
-
+                // insert foot content after <body> inner
+                shallowDOM.body = updateNode(shallowDOM.body, shallowDOM.body.inner + shallowDOM.foot.inner); 
             }
+
+            HTML += shallowDOM.body.node; // PASTE BODY NODE INTO HTML
+
+        } else {
+            throw "PLUSHTMLParser: your HTML code should contain a <body> tag";
         }
+
+        if (shallowDOM.foot) {
+            HTML += getChunk(plushtml, { start: getEnd(plushtml, "foot"), end: null }); // extracting code after </foot>
+        } else {
+            HTML += getChunk(plushtml, { start: getEnd(plushtml, "body"), end: null }); // extracting code after </body>
+        }
+
+        return HTML;
+
+    } else {
+            throw "PLUSHTMLParser: your HTML code can only be parsed as a string";
     }
-
-    return context.html;
-
 };
 
-
-exports.plushtml = parsePlushtml;
+module.exports = parsePlushtml;
