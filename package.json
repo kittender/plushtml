@@ -1,11 +1,11 @@
 {
   "name": "plushtml",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "plushtml allows you to write a HTML document structure with a little twist",
   "homepage": "https://github.com/kittender/plushtml#readme",
   "main": "plushtml.js",
   "scripts": {
-    "test": "plushtml.test.js"
+    "test" : "node test/htmlPosition.test.js && node test/htmlString.test.js && node test/shallowDOM.test.js"
   },
   "keywords": [
     "plushtml",
