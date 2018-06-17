@@ -11,10 +11,11 @@ const htmlChunky = "<p>Pantherish</p>";
 try {
 	const removeChunk = require('../lib/htmlString.js').removeChunk;
 	expect( removeChunk("<body>"+htmlChunk+"</body>", { start: "<body>".length, end: ("<body>".length + htmlChunk.length) }) ).to.equal( "<body></body>" );
-
 } catch(e) {
-	log("removeChunk", e);
+	log.error("removeChunk", e);
 }
+
+log.success("removeChunk");
 
 // @getChunk
 try {
@@ -22,26 +23,10 @@ try {
 	expect( getChunk("<body>"+htmlChunk+"</body>", { start: "<body>".length, end: ("<body>".length + htmlChunk.length) }) ).to.equal( htmlChunk );
 
 } catch(e) {
-	log("getChunk", e);
+	log.error("getChunk", e);
 }
 
-// @pasteBefore
-try {
-	const pasteBefore = require('../lib/htmlString.js').pasteBefore;
-	expect( pasteBefore("<body>"+htmlChunk+"</body>", htmlChunky, "<body>".length) ).to.equal( "<body>"+htmlChunky+htmlChunk+"</body>" );
-
-} catch(e) {
-	log("pasteBefore", e);
-}
-
-// @pasteAfter
-try {
-	const pasteAfter = require('../lib/htmlString.js').pasteAfter;
-	expect( pasteAfter("<body>"+htmlChunk+"</body>", htmlChunky, ("<body>".length + htmlChunk.length)) ).to.equal( "<body>"+htmlChunk+htmlChunky+"</body>" );
-
-} catch(e) {
-	log("pasteAfter", e);
-}
+log.success("getChunk");
 
 // @isChildrenOf
 try {
@@ -50,8 +35,10 @@ try {
 	expect( isChildrenOf("<body><strong></strong></body>", "em") ).to.equal( null );
 
 } catch(e) {
-	log("isChildrenOf", e);
+	log.error("isChildrenOf", e);
 }
+
+log.success("isChildrenOf");
 
 // @changeTag
 try {
@@ -59,5 +46,7 @@ try {
 	expect( changeTag("<body><p>awww</p></body>", "p", "div") ).to.equal( "<body><div>awww</div></body>" );
 
 } catch(e) {
-	log("changeTag", e);
+	log.error("changeTag", e);
 }
+
+log.success("changeTag");
