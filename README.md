@@ -49,13 +49,13 @@ It will try to print out your code structure as follows :
 
 ## Install
 
-```
+```javascript
 npm install plushtml
 ```
 
 ### Example usage
 
-```
+```javascript
 const fs = require('fs');
 const plushtml = require('plushtml');
 
