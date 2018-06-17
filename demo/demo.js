@@ -1,7 +1,9 @@
 const fs = require('fs');
-const exec = require('child_process').exec;
-const plushtml = require('../plushtml.js').plushtml;
+const plushtml = require('../plushtml');
 
-fs.readFile('./input.html', 'utf8', function(oErr, plushtmlString) {
-    console.log(plushtml(plushtmlString));
+fs.readFile('input.html', 'utf8', function (err, html) {
+  if (err) throw err;
+	fs.writeFile('output.html', plushtml(html), 'utf8', function (err) {
+	  if (err) throw err;
+	});
 });

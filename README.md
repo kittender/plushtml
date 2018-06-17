@@ -46,3 +46,23 @@ It will try to print out your code structure as follows :
 
 </html>
 ```
+
+## Install
+
+```
+npm install plushtml
+```
+
+### Example usage
+
+```
+const fs = require('fs');
+const plushtml = require('plushtml');
+
+fs.readFile('/path/to/input.html', 'utf8', function (err, html) {
+  if (err) throw err;
+    fs.writeFile('/path/to/output.html', plushtml(html), 'utf8', function (err) {
+      if (err) throw err;
+    });
+});
+```
